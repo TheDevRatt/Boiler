@@ -1,0 +1,43 @@
+name: Publish
+
+# Publishes TheDevRatt.Steam.Boiler to NuGet.org using Trusted Publishing (OIDC).
+# No API key is stored: nuget.org issues a short-lived key at run time after
+# verifying this workflow against the trusted publishing policy you configured
+# on nuget.org (Owner: TheDevRatt, Repository: Boiler, Workflow File: publish.yml).
+#
+# Bump <Version> in the csproj, then cut a GitHub Release to publish that version.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required: lets GitHub issue the OIDC token
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: dotnet pack src/TheDevRatt.Steam.Boiler/TheDevRatt.Steam.Boiler.csproj -c Release -o artifacts
+
+      - name: NuGet login (exchange OIDC token for a short-lived API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          # Your nuget.org username (profile name), not your email. Stored as a
+          # repo secret; it isn't sensitive, but keeping it out of the file is tidy.
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push
+        run: >
+          dotnet nuget push artifacts/*.nupkg
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
