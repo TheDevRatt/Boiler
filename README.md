@@ -1,6 +1,6 @@
 <div align="center">
   <img src="icon.png" width="120" alt="Boiler" />
-  <h1>Boiler</h1>
+  <h1>Steam Boiler</h1>
   <p><strong>Cross-platform Steam for Godot C#, minus the boilerplate.</strong></p>
 </div>
 
