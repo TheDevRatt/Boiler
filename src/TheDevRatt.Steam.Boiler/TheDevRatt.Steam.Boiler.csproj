@@ -17,7 +17,7 @@
     <Description>Boiler, cross-platform Steam for Godot C#. Bundles a version-matched Facepunch.Steamworks managed + native pair (Windows, macOS x64/arm64, Linux) and auto-installs a DllImport resolver so Steam loads in the Godot editor and in exports. No boilerplate.</Description>
     <PackageTags>godot;steam;steamworks;facepunch;native;cross-platform;multiplayer</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 
     <!-- Assets are delivered via MSBuild props/targets, not NuGet dependencies. -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
@@ -26,7 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
 
     <!-- Consumer-imported MSBuild logic: references the right Facepunch managed
          assembly, copies the right native, and injects the auto-init source. -->

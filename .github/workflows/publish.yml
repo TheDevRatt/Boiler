@@ -2,14 +2,20 @@ name: Publish
 
 # Publishes TheDevRatt.Steam.Boiler to NuGet.org using Trusted Publishing (OIDC).
 # No API key is stored: nuget.org issues a short-lived key at run time after
-# verifying this workflow against the trusted publishing policy you configured
-# on nuget.org (Owner: TheDevRatt, Repository: Boiler, Workflow File: publish.yml).
+# verifying this workflow against the trusted publishing policy on nuget.org
+# (Owner: TheDevRatt, Repository: Boiler, Workflow File: publish.yml).
 #
-# Bump <Version> in the csproj, then cut a GitHub Release to publish that version.
+# The version comes from the release tag (tag v0.3.1 publishes 0.3.1), so you
+# only bump the tag and the README, never the csproj. Manual runs can pass a
+# version input instead.
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, e.g. 0.3.1. Leave blank to use the csproj version."
+        required: false
 
 jobs:
   publish:
@@ -24,15 +30,32 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            v="${{ github.event.release.tag_name }}"
+            v="${v#v}"    # strip a leading v: v0.3.1 -> 0.3.1
+          else
+            v="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: ${v:-<csproj default>}"
+
       - name: Pack
-        run: dotnet pack src/TheDevRatt.Steam.Boiler/TheDevRatt.Steam.Boiler.csproj -c Release -o artifacts
+        shell: bash
+        run: |
+          args=""
+          if [ -n "${{ steps.ver.outputs.version }}" ]; then
+            args="-p:Version=${{ steps.ver.outputs.version }}"
+          fi
+          dotnet pack src/TheDevRatt.Steam.Boiler/TheDevRatt.Steam.Boiler.csproj -c Release -o artifacts $args
 
       - name: NuGet login (exchange OIDC token for a short-lived API key)
         uses: NuGet/login@v1
         id: login
         with:
-          # Your nuget.org username (profile name), not your email. Stored as a
-          # repo secret; it isn't sensitive, but keeping it out of the file is tidy.
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push
