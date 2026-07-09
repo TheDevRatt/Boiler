@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # Build the package once and share the .nupkg with the smoke jobs.
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Pack
+        run: dotnet pack src/TheDevRatt.Steam.Boiler/TheDevRatt.Steam.Boiler.csproj -c Release -o artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+  # Prove the bundled native loads at runtime on every platform. macOS is also
+  # proven through Godot itself; this closes the Windows and Linux gap.
+  smoke:
+    needs: pack
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts
+      - name: Run smoke consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=$(dotnet run --project test/Smoke/Smoke.csproj -c Release)
+          echo "$out"
+          echo "$out" | grep -q "NATIVE-OK" || { echo "::error::native did not load on ${{ matrix.os }}"; exit 1; }
+
+  # Guard against a managed/native version mismatch (the SteamFriends v017 vs v018
+  # class of bug). All three natives ship from one Facepunch release, so checking
+  # one against the managed wrapper's required accessors validates the release.
+  parity:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Accessor parity (managed wrapper vs bundled native)
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=src/TheDevRatt.Steam.Boiler/steam
+          managed="$base/managed/Facepunch.Steamworks.Posix.dll"
+          dylib="$base/native/osx/libsteam_api.dylib"
+
+          # Accessors the managed wrapper P/Invokes...
+          strings "$managed" | grep -oE 'SteamAPI_I?Steam[A-Za-z]+_v[0-9]+' | sort -u > needs_all.txt
+          # ...minus ISteamAppList, which the wrapper declares but Valve's client
+          # redistributable does not export (a restricted interface no normal game
+          # calls). It is absent from every Facepunch native by design.
+          grep -vE 'SteamAPI_SteamAppList_v[0-9]+' needs_all.txt > needs.txt
+
+          nm -gjU "$dylib" | sed 's/^_//' | grep -oE 'SteamAPI_I?Steam[A-Za-z]+_v[0-9]+' | sort -u > has.txt
+
+          missing=$(comm -23 needs.txt has.txt || true)
+          if [ -n "$missing" ]; then
+            echo "::error::native is missing accessors the managed wrapper needs:"
+            echo "$missing"
+            exit 1
+          fi
+          echo "Parity OK — native exports all $(wc -l < needs.txt | tr -d ' ') required accessors."

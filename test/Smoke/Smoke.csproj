@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CI smoke consumer. References the packed Boiler package from the local
+       feed (see nuget.config) and confirms the bundled native actually loads on
+       this OS. Run by .github/workflows/ci.yml on Windows, macOS, and Linux. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Boiler.Smoke</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Floating version: always resolves the newest package in the local feed. -->
+    <PackageReference Include="TheDevRatt.Steam.Boiler" Version="*" />
+  </ItemGroup>
+
+</Project>
