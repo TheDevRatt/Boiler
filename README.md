@@ -53,7 +53,7 @@ You write against the normal Facepunch API — Boiler just makes it load.
 ## Install
 
 ```
-dotnet add package TheDevRatt.Boiler
+dotnet add package TheDevRatt.Steam.Boiler
 ```
 
 Then use Facepunch as you normally would. A module initializer registers the

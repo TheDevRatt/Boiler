@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace TheDevRatt.Boiler;
+namespace TheDevRatt.Steam.Boiler;
 
 /// <summary>
 /// Makes Facepunch.Steamworks' native library load correctly under Godot on

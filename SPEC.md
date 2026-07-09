@@ -2,7 +2,7 @@
 
 **Status:** Draft — core decisions resolved
 **Author:** TheDevRatt
-**Package (working name):** `TheDevRatt.Godot.Steam` (personal namespace first; propose to Chickensoft later if it proves useful)
+**Package:** `TheDevRatt.Steam.Boiler` ("Boiler"; personal namespace first, propose to Chickensoft later if it proves useful)
 **Date:** 2026-07-09
 **Reference implementation:** Eldritch Engine (`Sync/Steam/`, `Directory.Build.props`)
 
