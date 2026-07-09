@@ -79,4 +79,4 @@ jobs:
             echo "$missing"
             exit 1
           fi
-          echo "Parity OK — native exports all $(wc -l < needs.txt | tr -d ' ') required accessors."
+          echo "Parity OK, native exports all $(wc -l < needs.txt | tr -d ' ') required accessors."

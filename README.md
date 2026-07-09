@@ -1,91 +1,96 @@
-# Boiler
+<div align="center">
+  <img src="icon.png" width="120" alt="Boiler" />
+  <h1>Boiler</h1>
+  <p><strong>Cross-platform Steam for Godot C#, minus the boilerplate.</strong></p>
+</div>
 
-**Cross-platform Steam for Godot C# — without the boilerplate.**
-
-If you've tried to wire Steam into a Godot C# game and had it work on Windows but
-quietly die on your Mac or on a Linux build, you've met the problem Boiler solves.
-Add the package, call `SteamClient.Init`, and Steam works — Windows, macOS
-(Intel *and* Apple Silicon), and Linux. That's it.
+Ever wired Steam into a Godot C# game, gotten it running on Windows, and then
+watched it fall over the moment you opened the project on a Mac or built for
+Linux? That is the exact headache Boiler takes off your plate. Add the package,
+call `SteamClient.Init`, and Steam works everywhere: Windows, macOS (Intel and
+Apple Silicon), and Linux.
 
 ```csharp
 using Steamworks;
 
-if (SteamClient.Init(480)) // 480 = Spacewar, Valve's public test app
-{
-    GD.Print($"Steam says hi to {SteamClient.Name}");
-}
+SteamClient.Init(480);            // 480 is Spacewar, Valve's public test app
+GD.Print($"Steam says hi to {SteamClient.Name}");
 ```
 
-No manual DLL wrangling, no `runtimes/` folder archaeology, no "works on my
-machine." Boiler installs itself when your game starts.
+No DLL shuffling, no digging through `runtimes/` folders, no "works on my
+machine." Boiler sets itself up when your game starts and gets out of the way.
 
-## Why this exists
+## Why you need it
 
-Steam integration in .NET is two moving parts: a managed wrapper
+Steam in .NET is really two pieces glued together: a managed wrapper
 ([Facepunch.Steamworks](https://github.com/Facepunch/Facepunch.Steamworks)) and
 Valve's native `steam_api` library. Getting them to load together inside Godot is
-where everyone trips, for two reasons:
+where the afternoon disappears, and it comes down to two things.
 
-- **Godot ignores NuGet's native-loading convention.** The standard
-  `runtimes/<rid>/native` mechanism that Just Works in a console app does *not*
-  fire inside Godot's .NET host — so the native library never gets found, and
-  `SteamClient.Init` throws a cryptic "DLL not found."
-- **The two halves drift.** The managed wrapper and the native binary have to
-  agree on exact Steam interface versions. Mix a wrapper from one release with a
-  native from another and you get an equally cryptic "entry point not found" the
-  first time you touch Friends or networking.
+The first is that Godot ignores the way NuGet normally ships native libraries.
+The `runtimes/<rid>/native` mechanism that works fine in a console app never
+fires inside Godot's .NET host, so the native library just is not there when you
+ask for it, and `SteamClient.Init` throws a "DLL not found" that tells you
+nothing useful.
 
-Boiler handles both. It ships a managed + native pair taken from a **single**
-Facepunch release (so they can't drift), copies the right native for your
-platform next to your build, and installs a `DllImportResolver` at startup that
-actually finds it — in the editor and in exported builds alike.
+The second is that the two pieces have to agree on exact Steam interface
+versions. Grab a wrapper from one release and a native binary from another and
+the first time you touch Friends or networking you get an equally unhelpful
+"entry point not found."
 
-## What's inside
+Boiler deals with both. It ships a managed and native pair pulled from the same
+Facepunch release (so they cannot drift apart), copies the right native for your
+platform next to your build, and installs a resolver at startup that actually
+finds it, in the editor and in exported builds.
+
+## What's in the box
 
 | Platform | Managed wrapper | Native |
-|---|---|---|
+| --- | --- | --- |
 | Windows x64 | `Facepunch.Steamworks.Win64` | `steam_api64.dll` |
-| macOS (x64 + arm64) | `Facepunch.Steamworks.Posix` | `libsteam_api.dylib` (universal) |
+| macOS (x64 and arm64) | `Facepunch.Steamworks.Posix` | `libsteam_api.dylib` (universal) |
 | Linux x64 | `Facepunch.Steamworks.Posix` | `libsteam_api.so` |
 
-You write against the normal Facepunch API — Boiler just makes it load.
+You write against the normal Facepunch API. Boiler's whole job is making it load.
 
-## Install
+## Getting started
 
 ```
 dotnet add package TheDevRatt.Steam.Boiler
 ```
 
-Then use Facepunch as you normally would. A module initializer registers the
-native resolver before your first line of game code runs, so there's genuinely
-nothing to call. (If you want to force it early or be explicit, `SteamNative.Register()`
-is public and idempotent.)
+Then use Facepunch the way you normally would. A module initializer registers the
+native resolver before your first line of game code runs, so there is genuinely
+nothing to wire up. If you would rather be explicit or kick it off early,
+`SteamNative.Register()` is public and safe to call more than once.
 
-Drop a `steam_appid.txt` next to your executable — or at your project root while
-developing — so `SteamClient.Init` can run without launching through the Steam
-client.
+Drop a `steam_appid.txt` next to your executable (or at your project root while
+you are in the editor) so `SteamClient.Init` can run without launching through
+the Steam client.
 
-## Status
+## Where it's at
 
-Early days, but working. Verified end-to-end against a fresh Chickensoft
+Early, but working. It has been run end to end against a fresh Chickensoft
 [GodotGame](https://github.com/chickensoft-games/GodotGame) template: Steam comes
-online in the Godot editor on Apple Silicon with the two lines above and nothing
-else.
+online in the Godot editor on Apple Silicon with the snippet above and nothing
+else. CI builds the package and smoke-tests that the native loads on Windows,
+macOS, and Linux, plus a parity check that catches a mismatched version bump
+before it ships.
 
-Still on the list:
+Still on the to-do list:
 
-- publish to NuGet.org
-- a CI matrix that runtime-tests Windows and Linux (macOS is proven; the other
-  two are build- and packaging-verified)
-- a macOS codesigning/notarization guide for the bundled dylib in shipped `.app`s
+* publish to NuGet.org
+* a macOS codesigning and notarization guide for the bundled dylib in shipped apps
+* zero-config support for consumers who bring their own Steam SDK build
 
-## Notes
+## A couple of notes
 
-- Boiler bundles Valve's redistributable Steam binaries, the same way Facepunch,
-  Steamworks.NET, and GodotSteam do. You still need to be a Steamworks partner to
-  ship a real game on Steam.
-- The Facepunch wrapper is MIT-licensed; this package is too.
+Boiler bundles Valve's redistributable Steam binaries, the same way Facepunch,
+Steamworks.NET, and GodotSteam do. You still need to be a Steamworks partner to
+ship a real game on Steam.
+
+The Facepunch wrapper is MIT licensed, and so is this.
 
 ## License
 
-MIT.
+MIT. See [LICENSE](LICENSE).

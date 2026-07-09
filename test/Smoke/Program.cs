@@ -1,6 +1,6 @@
 // CI smoke test: prove the bundled Steam native loads on this OS.
 //
-// A CI runner has no Steam client, so SteamClient.Init cannot fully succeed —
+// A CI runner has no Steam client, so SteamClient.Init cannot fully succeed,
 // and that's fine. What we assert is that loading the native does NOT fail with
 // "library not found" or "entry point not found" (which would mean the wrong
 // architecture, a missing binary, or a managed/native version mismatch). Steam
