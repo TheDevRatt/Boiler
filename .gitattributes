@@ -1,0 +1,7 @@
+# Normalize text; never touch the vendored native/managed binaries.
+* text=auto eol=lf
+
+*.dll   binary
+*.dylib binary
+*.so    binary
+*.nupkg binary

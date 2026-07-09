@@ -1,0 +1,13 @@
+# .NET build outputs
+bin/
+obj/
+*.user
+
+# Local NuGet feed produced by `dotnet pack`
+artifacts/
+
+# Test consumer clone (not part of this repo)
+sandbox/
+
+# OS
+.DS_Store
