@@ -18,7 +18,6 @@
     <PackageTags>godot;steam;steamworks;facepunch;native;cross-platform;multiplayer</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
 
     <!-- Assets are delivered via MSBuild props/targets, not NuGet dependencies. -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
@@ -28,7 +27,6 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
 
     <!-- Consumer-imported MSBuild logic: references the right Facepunch managed
          assembly, copies the right native, and injects the auto-init source. -->
